@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./config/database'); // Mengimpor konfigurasi database
 const barangRoutes = require('./routes/barangRoutes'); // Mengimpor route untuk barang
+const authRoutes = require('./routes/authRoutes'); // Mengimpor route untuk autentikasi
+const inventoryRoutes = require('./routes/inventoryRoutes');
 
 const app = express();
 const port = 3000;
@@ -10,6 +12,8 @@ const port = 3000;
 app.use(cors()); // Mengizinkan aplikasi React Native mengakses backend ini
 app.use(express.json()); // Memastikan backend bisa membaca format data JSON
 app.use('/api/barang', barangRoutes); // Menggunakan route untuk barang
+app.use('/api/auth', authRoutes); // Menggunakan route untuk autentikasi
+app.use('/api/items', inventoryRoutes);
 
 // Route dasar untuk pengetesan awal
 app.get('/', (req, res) => {
