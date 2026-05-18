@@ -7,46 +7,41 @@ export default function DashboardScreen({ route }) {
   const { user } = route.params; 
   
   const isOwner = user.role?.toLowerCase() === 'owner' || user.cabang?.toLowerCase() === 'all';
-  const [selectedCabang, setSelectedCabang] = useState('Meteora 1');
+  
+  // PERBAIKAN 1: Jika Owner, default Meteora 1. Jika Staff, sesuaikan dengan cabangnya sendiri!
+  const [selectedCabang, setSelectedCabang] = useState(isOwner ? 'Meteora 1' : user.cabang);
+  
+  // STATE BARU: Untuk mengontrol buka/tutup menu Dropdown Combo Box
+  const [showDropdown, setShowDropdown] = useState(false);
+  
   const [activeCategory, setActiveCategory] = useState('Minuman');
-
-  // --- 1. STATE UNTUK MENAMPUNG DATA ASLI DARI DATABASE ---
   const [items, setItems] = useState([]);
 
-  // --- 2. PENYEDOT DATA OTOMATIS (USE EFFECT) ---
   useEffect(() => {
     const fetchInventory = async () => {
       try {
-        // Ingat! Gunakan IP Hotspot-mu yang terakhir kali dipakai
-        const response = await fetch('http://192.168.1.37:3000/api/items');
+        // Ingat IP-nya jangan sampai tertukar lagi ya!
+        const response = await fetch('http://192.168.1.37:3000/api/items'); // <-- PASTIKAN IP INI BENAR
         const result = await response.json();
 
         if (response.ok) {
-          // Masukkan data JSON dari Postman tadi ke dalam State aplikasi
           setItems(result.data);
         } else {
           Alert.alert('Gagal Mengambil Data', result.message || 'Terjadi kesalahan');
         }
       } catch (error) {
         console.error("Error Fetch Inventory:", error);
-        // Alert.alert('Koneksi Error', 'Tidak dapat terhubung ke server backend.');
       }
     };
 
     fetchInventory();
-  }, []); // Array kosong berarti fungsi ini hanya berjalan 1x saat layar Dashboard pertama kali terbuka
+  }, []); 
 
-// --- 3. LOGIKA FILTER & PERHITUNGAN MATEMATIKA OTOMATIS ---
-  
-  // A. Pertama, saring data HANYA untuk cabang yang sedang dilihat (Meteora 1 / Meteora 2)
-  const branchItems = items.filter(item => item.cabang === selectedCabang);
-
-  // B. Kedua, saring lagi berdasarkan tab yang diklik (Minuman / Makanan)
+  // --- LOGIKA FILTER CABANG & KATEGORI ---
+  const branchItems = items.filter(item => item.cabang?.toLowerCase() === selectedCabang?.toLowerCase());
   const filteredItems = branchItems.filter(item => item.kategori === activeCategory);
   
-  // C. Menghitung statistik KHUSUS untuk cabang tersebut
   const totalInventory = branchItems.length;
-  // Perhatikan: kita sekarang memanggil item.jumlah_stok sesuai nama kolom di tb_stok
   const lowStockCount = branchItems.filter(item => (item.jumlah_stok || 0) < 5).length; 
   const safeStockCount = totalInventory - lowStockCount;
 
@@ -65,9 +60,42 @@ export default function DashboardScreen({ route }) {
         
         {isOwner ? (
           <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.pickerContainer}>
-              <Text style={styles.pickerText}>{selectedCabang} ▼</Text>
-            </TouchableOpacity>
+            
+            {/* PERBAIKAN 2: Bungkus Combo Box agar Dropdown bisa menempel di bawahnya */}
+            <View style={{ position: 'relative', zIndex: 10 }}>
+              <TouchableOpacity 
+                style={styles.pickerContainer} 
+                onPress={() => setShowDropdown(!showDropdown)} // Tombol buka/tutup
+              >
+                <Text style={styles.pickerText}>{selectedCabang} ▼</Text>
+              </TouchableOpacity>
+
+              {/* Tampilan Menu Dropdown (Meteora 1 & Meteora 2) */}
+              {showDropdown && (
+                <View style={styles.dropdownMenu}>
+                  <TouchableOpacity 
+                    style={styles.dropdownItem} 
+                    onPress={() => {
+                      setSelectedCabang('Meteora 1'); // Ubah cabang ke Meteora 1
+                      setShowDropdown(false); // Tutup dropdown
+                    }}
+                  >
+                    <Text style={styles.dropdownItemText}>Meteora 1</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={styles.dropdownItem} 
+                    onPress={() => {
+                      setSelectedCabang('Meteora 2'); // Ubah cabang ke Meteora 2
+                      setShowDropdown(false); // Tutup dropdown
+                    }}
+                  >
+                    <Text style={styles.dropdownItemText}>Meteora 2</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+            
             <TouchableOpacity>
               <Ionicons name="person-circle-outline" size={32} color="#333" />
             </TouchableOpacity>
