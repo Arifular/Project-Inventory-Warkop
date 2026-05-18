@@ -14,7 +14,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from './LoginScreenStyles';
 
-export default function LoginScreen() {
+export default function LoginScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +29,18 @@ export default function LoginScreen() {
 
     try {
       // 2. Tembak API Backend menggunakan IP Wi-Fi Laptop
-      const response = await fetch('http://192.168.1.37:3000/api/auth/login', {
+      // const response = await fetch('http://192.168.1.37:3000/api/auth/login', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({
+      //     username: username,
+      //     password: password,
+      //   }),
+      // });
+
+      const response = await fetch('http://192.168.68.109:3000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,14 +51,16 @@ export default function LoginScreen() {
         }),
       });
 
+
       // 3. Baca balasan dari database
       const data = await response.json();
 
       // 4. Logika jika sukses atau gagal
       if (response.ok) {
         // Jika sukses, munculkan pop-up dengan nama cabang
-        Alert.alert('Login Berhasil! 🎉', `Selamat datang, kamu login sebagai ${data.user.role} di cabang ${data.user.cabang}`);
+        //Alert.alert('Login Berhasil! 🎉', `Selamat datang, kamu login sebagai ${data.user.role} di cabang ${data.user.cabang}`);
         // (Nantinya di sini kita buat kode untuk pindah ke halaman Dashboard)
+        navigation.replace('Dashboard', { user: data.user });
       } else {
         // Jika username/password salah
         Alert.alert('Login Gagal ❌', data.error);
