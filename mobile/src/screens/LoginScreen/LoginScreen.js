@@ -28,19 +28,8 @@ export default function LoginScreen({ navigation }) {
     }
 
     try {
-      // 2. Tembak API Backend menggunakan IP Wi-Fi Laptop
-      // const response = await fetch('http://192.168.1.37:3000/api/auth/login', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     username: username,
-      //     password: password,
-      //   }),
-      // });
-
-      const response = await fetch('http://192.168.68.109:3000/api/auth/login', {
+      //2. Tembak API Backend menggunakan IP Wi-Fi Laptop
+      const response = await fetch('http://192.168.1.37:3000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -50,6 +39,17 @@ export default function LoginScreen({ navigation }) {
           password: password,
         }),
       });
+
+      // const response = await fetch('http://192.168.68.109:3000/api/auth/login', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({
+      //     username: username,
+      //     password: password,
+      //   }),
+      // });
 
 
       // 3. Baca balasan dari database
