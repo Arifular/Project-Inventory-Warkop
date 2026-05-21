@@ -16,6 +16,7 @@ app.use('/api/barang', barangRoutes); // Menggunakan route untuk barang
 app.use('/api/auth', authRoutes); // Menggunakan route untuk autentikasi
 app.use('/api/items', inventoryRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/inventory', inventoryRoutes);
 
 // Route dasar untuk pengetesan awal
 app.get('/', (req, res) => {

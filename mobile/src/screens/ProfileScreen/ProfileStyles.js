@@ -166,5 +166,72 @@ export const styles = StyleSheet.create({
     color: '#A0A0A0',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  // --- CUSTOM MODAL POP-UP ---
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Efek gelap transparan di background
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '85%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  modalIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FFEBEE', // Merah pudar
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1A1A1A',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  btnModalPrimary: {
+    width: '100%',
+    backgroundColor: '#B3261E', // Merah gelap
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  btnModalPrimaryText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  btnModalSecondary: {
+    width: '100%',
+    backgroundColor: '#E0E0E0', // Abu-abu
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  btnModalSecondaryText: {
+    color: '#333333',
+    fontSize: 16,
+    fontWeight: 'bold',
   }
 });

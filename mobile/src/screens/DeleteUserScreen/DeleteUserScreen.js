@@ -1,24 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+// PERUBAHAN: Tambahkan import Modal
+import { View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from './DeleteUserStyles';
 
 export default function DeleteUserScreen({ navigation }) {
-  // States Dropdown
   const [showDropdownCabang, setShowDropdownCabang] = useState(false);
   const [showDropdownStaff, setShowDropdownStaff] = useState(false);
 
-  // States Data
   const [cabang, setCabang] = useState('');
   const [staffList, setStaffList] = useState([]);
   const [selectedStaff, setSelectedStaff] = useState(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingStaff, setIsFetchingStaff] = useState(false);
+  
+  // STATE BARU: Untuk mengontrol buka/tutup Custom Modal Hapus
+  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const listCabang = ['Meteora 1', 'Meteora 2'];
 
-  // 1. FUNGSI MENGAMBIL DAFTAR STAFF
   const fetchStaffByCabang = async (selectedCabang) => {
     setIsFetchingStaff(true);
     setSelectedStaff(null); 
@@ -41,30 +42,19 @@ export default function DeleteUserScreen({ navigation }) {
     }
   };
 
-  // 2. FUNGSI KONFIRMASI POP-UP
+  // Pemicu tombol hapus di luar card
   const handleHapusUser = () => {
     if (!cabang || !selectedStaff) {
       Alert.alert('Peringatan', 'Mohon pilih Cabang dan Akun Staff terlebih dahulu!');
       return;
     }
-
-    // Tampilkan Pop-up Konfirmasi (Yes/No)
-    Alert.alert(
-      "Konfirmasi Penghapusan",
-      `Apakah yakin untuk menghapus akun "${selectedStaff.username}" secara permanen?`,
-      [
-        { text: "Tidak", style: "cancel" },
-        { 
-          text: "Ya, Hapus", 
-          onPress: () => eksekusiHapus(),
-          style: 'destructive' // Membuat teks tombol ini berwarna merah di iOS
-        }
-      ]
-    );
+    // Buka Custom Modal
+    setDeleteModalVisible(true);
   };
 
-  // 3. FUNGSI EKSEKUSI HAPUS KE API
+  // Eksekusi pemanggilan API backend setelah dikonfirmasi di dalam modal
   const eksekusiHapus = async () => {
+    setDeleteModalVisible(false); // Tutup modal terlebih dahulu
     setIsLoading(true);
 
     try {
@@ -182,7 +172,7 @@ export default function DeleteUserScreen({ navigation }) {
         </View>
       </ScrollView>
 
-      {/* FOOTER & TOMBOL HAPUS */}
+      {/* FOOTER & TOMBOL HAPUS UTAMA */}
       <View style={styles.footer}>
         <TouchableOpacity 
           style={[styles.btnDelete, isLoading && styles.btnDeleteDisabled]} 
@@ -199,6 +189,37 @@ export default function DeleteUserScreen({ navigation }) {
           )}
         </TouchableOpacity>
       </View>
+
+      {/* --- KOMPONEN CUSTOM MODAL KONFIRMASI HAPUS --- */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={isDeleteModalVisible}
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            
+            <View style={styles.modalIconCircle}>
+              <Ionicons name="warning" size={36} color="#D32F2F" />
+            </View>
+            
+            <Text style={styles.modalTitle}>Konfirmasi Penghapusan</Text>
+            <Text style={styles.modalSubtitle}>
+              Apakah Anda yakin ingin menghapus akun "{selectedStaff?.username}"? Tindakan ini tidak dapat dibatalkan.
+            </Text>
+
+            <TouchableOpacity style={styles.btnModalPrimary} onPress={eksekusiHapus}>
+              <Text style={styles.btnModalPrimaryText}>Ya, Hapus</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.btnModalSecondary} onPress={() => setDeleteModalVisible(false)}>
+              <Text style={styles.btnModalSecondaryText}>Tidak</Text>
+            </TouchableOpacity>
+
+          </View>
+        </View>
+      </Modal>
 
     </KeyboardAvoidingView>
   );

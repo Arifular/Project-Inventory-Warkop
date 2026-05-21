@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getInventory } = require('../controllers/inventoryController');
+const inventoryController = require('../controllers/inventoryController');
 
-// Rute ini akan dipanggil dengan metode GET
-router.get('/', getInventory);
+// Pastikan "barangMasuk" huruf besar-kecilnya sama persis
+router.post('/in', inventoryController.barangMasuk);
 
 module.exports = router;

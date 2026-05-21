@@ -54,4 +54,67 @@ export const styles = StyleSheet.create({
   },
   btnDeleteDisabled: { backgroundColor: '#E57373', elevation: 0 },
   btnText: { fontSize: 16, fontWeight: 'bold', color: '#FFFFFF', marginRight: 10 },
+  // --- CUSTOM MODAL POP-UP (BARU) ---
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '85%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    elevation: 5,
+  },
+  modalIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#FDE8E8', // Merah pudar khas alert
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1A1A1A',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#4B5563',
+    textAlign: 'center',
+    marginBottom: 26,
+    lineHeight: 22,
+  },
+  btnModalPrimary: {
+    width: '100%',
+    backgroundColor: '#C5221F', // Warna merah tegas "Ya, Hapus"
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  btnModalPrimaryText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  btnModalSecondary: {
+    width: '100%',
+    backgroundColor: '#E5E7EB', // Warna abu-abu tombol "Tidak"
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  btnModalSecondaryText: {
+    color: '#374151',
+    fontSize: 16,
+    fontWeight: 'bold',
+  }
 });
