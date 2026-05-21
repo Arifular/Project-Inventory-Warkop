@@ -3,50 +3,45 @@ import { View, Text, Image, ScrollView, TouchableOpacity, Alert } from 'react-na
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from './DashboardStyles';
 
-export default function DashboardScreen({ route }) {
+// PERBAIKAN NAVIGASI 1: Tambahkan 'navigation' di parameter fungsi
+export default function DashboardScreen({ route, navigation }) {
   const { user } = route.params; 
   
   const isOwner = user.role?.toLowerCase() === 'owner' || user.cabang?.toLowerCase() === 'all';
-  const [selectedCabang, setSelectedCabang] = useState('Meteora 1');
+  
+  // Jika Owner, default Meteora 1. Jika Staff, sesuaikan dengan cabangnya sendiri!
+  const [selectedCabang, setSelectedCabang] = useState(isOwner ? 'Meteora 1' : user.cabang);
+  
+  // STATE BARU: Untuk mengontrol buka/tutup menu Dropdown Combo Box
+  const [showDropdown, setShowDropdown] = useState(false);
+  
   const [activeCategory, setActiveCategory] = useState('Minuman');
-
-  // --- 1. STATE UNTUK MENAMPUNG DATA ASLI DARI DATABASE ---
   const [items, setItems] = useState([]);
 
-  // --- 2. PENYEDOT DATA OTOMATIS (USE EFFECT) ---
   useEffect(() => {
     const fetchInventory = async () => {
       try {
-        // Ingat! Gunakan IP Hotspot-mu yang terakhir kali dipakai
-        const response = await fetch('http://192.168.1.37:3000/api/items');
+        const response = await fetch('http://192.168.1.22:3000/api/items'); 
         const result = await response.json();
 
         if (response.ok) {
-          // Masukkan data JSON dari Postman tadi ke dalam State aplikasi
           setItems(result.data);
         } else {
           Alert.alert('Gagal Mengambil Data', result.message || 'Terjadi kesalahan');
         }
       } catch (error) {
         console.error("Error Fetch Inventory:", error);
-        // Alert.alert('Koneksi Error', 'Tidak dapat terhubung ke server backend.');
       }
     };
 
     fetchInventory();
-  }, []); // Array kosong berarti fungsi ini hanya berjalan 1x saat layar Dashboard pertama kali terbuka
+  }, []); 
 
-// --- 3. LOGIKA FILTER & PERHITUNGAN MATEMATIKA OTOMATIS ---
-  
-  // A. Pertama, saring data HANYA untuk cabang yang sedang dilihat (Meteora 1 / Meteora 2)
-  const branchItems = items.filter(item => item.cabang === selectedCabang);
-
-  // B. Kedua, saring lagi berdasarkan tab yang diklik (Minuman / Makanan)
+  // --- LOGIKA FILTER CABANG & KATEGORI ---
+  const branchItems = items.filter(item => item.cabang?.toLowerCase() === selectedCabang?.toLowerCase());
   const filteredItems = branchItems.filter(item => item.kategori === activeCategory);
   
-  // C. Menghitung statistik KHUSUS untuk cabang tersebut
   const totalInventory = branchItems.length;
-  // Perhatikan: kita sekarang memanggil item.jumlah_stok sesuai nama kolom di tb_stok
   const lowStockCount = branchItems.filter(item => (item.jumlah_stok || 0) < 5).length; 
   const safeStockCount = totalInventory - lowStockCount;
 
@@ -65,10 +60,42 @@ export default function DashboardScreen({ route }) {
         
         {isOwner ? (
           <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.pickerContainer}>
-              <Text style={styles.pickerText}>{selectedCabang} ▼</Text>
-            </TouchableOpacity>
-            <TouchableOpacity>
+            
+            <View style={{ position: 'relative', zIndex: 10 }}>
+              <TouchableOpacity 
+                style={styles.pickerContainer} 
+                onPress={() => setShowDropdown(!showDropdown)} 
+              >
+                <Text style={styles.pickerText}>{selectedCabang} ▼</Text>
+              </TouchableOpacity>
+
+              {showDropdown && (
+                <View style={styles.dropdownMenu}>
+                  <TouchableOpacity 
+                    style={styles.dropdownItem} 
+                    onPress={() => {
+                      setSelectedCabang('Meteora 1'); 
+                      setShowDropdown(false); 
+                    }}
+                  >
+                    <Text style={styles.dropdownItemText}>Meteora 1</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={styles.dropdownItem} 
+                    onPress={() => {
+                      setSelectedCabang('Meteora 2'); 
+                      setShowDropdown(false); 
+                    }}
+                  >
+                    <Text style={styles.dropdownItemText}>Meteora 2</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+            
+            {/* PERBAIKAN NAVIGASI 2: Pasang fungsi onPress untuk Owner (Header Kanan) */}
+            <TouchableOpacity onPress={() => navigation.navigate('Profile', { user })}>
               <Ionicons name="person-circle-outline" size={32} color="#333" />
             </TouchableOpacity>
           </View>
@@ -85,7 +112,6 @@ export default function DashboardScreen({ route }) {
         <View style={styles.mainCard}>
           <View>
             <Text style={styles.cardLabel}>TOTAL INVENTORY</Text>
-            {/* Tampilkan angka dinamis dari database */}
             <Text style={styles.cardValue}>{totalInventory} <Text style={styles.cardItemsText}>items</Text></Text>
             <Text style={styles.cardSub}>Data Real-Time MySQL</Text>
           </View>
@@ -138,8 +164,8 @@ export default function DashboardScreen({ route }) {
           <Text style={{textAlign: 'center', marginTop: 20, color: '#888'}}>Tidak ada data {activeCategory}</Text>
         ) : (
           filteredItems.map((item) => {
-            const currentStock = item.jumlah_stok || 0; // Baca kolom stok, jika null jadikan 0
-            const isAlert = currentStock < 5; // Syarat warning merah
+            const currentStock = item.jumlah_stok || 0; 
+            const isAlert = currentStock < 5; 
 
             return (
               <View 
@@ -156,7 +182,6 @@ export default function DashboardScreen({ route }) {
                   </View>
                   <View>
                     <Text style={styles.itemName}>{item.nama_barang}</Text>
-                    {/* Menggunakan nama_barang untuk subtitel agar tidak kosong */}
                     <Text style={[styles.itemSub, isAlert && { color: '#E53935' }]}>
                       {isAlert ? 'Low Stock Alert' : item.kategori}
                     </Text>
@@ -188,7 +213,10 @@ export default function DashboardScreen({ route }) {
         {isOwner ? (
           <TouchableOpacity><Ionicons name="time" size={24} color="#888" /></TouchableOpacity> 
         ) : (
-          <TouchableOpacity><Ionicons name="person" size={24} color="#888" /></TouchableOpacity> 
+          /* PERBAIKAN NAVIGASI 3: Pasang fungsi onPress untuk Staff (Bottom Nav Kanan) */
+          <TouchableOpacity onPress={() => navigation.navigate('Profile', { user })}>
+            <Ionicons name="person" size={24} color="#888" />
+          </TouchableOpacity> 
         )}
       </View>
 

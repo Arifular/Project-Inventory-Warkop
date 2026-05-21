@@ -4,6 +4,7 @@ const db = require('./config/database'); // Mengimpor konfigurasi database
 const barangRoutes = require('./routes/barangRoutes'); // Mengimpor route untuk barang
 const authRoutes = require('./routes/authRoutes'); // Mengimpor route untuk autentikasi
 const inventoryRoutes = require('./routes/inventoryRoutes');
+const userRoutes = require('./routes/userRoutes'); // Mengimpor route untuk user
 
 const app = express();
 const port = 3000;
@@ -14,6 +15,7 @@ app.use(express.json()); // Memastikan backend bisa membaca format data JSON
 app.use('/api/barang', barangRoutes); // Menggunakan route untuk barang
 app.use('/api/auth', authRoutes); // Menggunakan route untuk autentikasi
 app.use('/api/items', inventoryRoutes);
+app.use('/api/users', userRoutes);
 
 // Route dasar untuk pengetesan awal
 app.get('/', (req, res) => {

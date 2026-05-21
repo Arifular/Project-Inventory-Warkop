@@ -39,6 +39,33 @@ export const styles = StyleSheet.create({
   },
   pickerTextStaff: { fontSize: 13, fontWeight: '700', color: '#333' },
 
+  // --- TAMBAHAN STYLE UNTUK DROPDOWN OWNER ---
+  dropdownMenu: {
+    position: 'absolute',
+    top: 40, 
+    right: 0,
+    backgroundColor: '#FFF',
+    borderRadius: 10,
+    paddingVertical: 5,
+    width: 120,
+    elevation: 5, 
+    shadowColor: '#000', 
+    shadowOpacity: 0.2, 
+    shadowRadius: 5,
+    zIndex: 1000, // Memastikan dropdown menimpa elemen di bawahnya
+  },
+  dropdownItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  dropdownItemText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#333',
+  },
+
   // --- MAIN CARD (YELLOW) ---
  mainCard: { 
     backgroundColor: '#FFCC00', margin: 20, borderRadius: 24, padding: 24,
