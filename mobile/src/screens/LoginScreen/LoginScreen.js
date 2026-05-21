@@ -23,13 +23,14 @@ export default function LoginScreen({ navigation }) {
   const handleLogin = async () => {
     // 1. Cek kalau ada kolom yang kosong
     if (!username || !password) {
+
       Alert.alert('Perhatian', 'Username dan password tidak boleh kosong!');
       return;
     }
 
     try {
       //2. Tembak API Backend menggunakan IP Wi-Fi Laptop
-      const response = await fetch('http://192.168.1.37:3000/api/auth/login', {
+      const response = await fetch('http://192.168.1.22:3000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

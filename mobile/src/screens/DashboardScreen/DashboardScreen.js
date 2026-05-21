@@ -3,12 +3,13 @@ import { View, Text, Image, ScrollView, TouchableOpacity, Alert } from 'react-na
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from './DashboardStyles';
 
-export default function DashboardScreen({ route }) {
+// PERBAIKAN NAVIGASI 1: Tambahkan 'navigation' di parameter fungsi
+export default function DashboardScreen({ route, navigation }) {
   const { user } = route.params; 
   
   const isOwner = user.role?.toLowerCase() === 'owner' || user.cabang?.toLowerCase() === 'all';
   
-  // PERBAIKAN 1: Jika Owner, default Meteora 1. Jika Staff, sesuaikan dengan cabangnya sendiri!
+  // Jika Owner, default Meteora 1. Jika Staff, sesuaikan dengan cabangnya sendiri!
   const [selectedCabang, setSelectedCabang] = useState(isOwner ? 'Meteora 1' : user.cabang);
   
   // STATE BARU: Untuk mengontrol buka/tutup menu Dropdown Combo Box
@@ -20,8 +21,7 @@ export default function DashboardScreen({ route }) {
   useEffect(() => {
     const fetchInventory = async () => {
       try {
-        // Ingat IP-nya jangan sampai tertukar lagi ya!
-        const response = await fetch('http://192.168.1.37:3000/api/items'); // <-- PASTIKAN IP INI BENAR
+        const response = await fetch('http://192.168.1.22:3000/api/items'); 
         const result = await response.json();
 
         if (response.ok) {
@@ -61,23 +61,21 @@ export default function DashboardScreen({ route }) {
         {isOwner ? (
           <View style={styles.headerRight}>
             
-            {/* PERBAIKAN 2: Bungkus Combo Box agar Dropdown bisa menempel di bawahnya */}
             <View style={{ position: 'relative', zIndex: 10 }}>
               <TouchableOpacity 
                 style={styles.pickerContainer} 
-                onPress={() => setShowDropdown(!showDropdown)} // Tombol buka/tutup
+                onPress={() => setShowDropdown(!showDropdown)} 
               >
                 <Text style={styles.pickerText}>{selectedCabang} ▼</Text>
               </TouchableOpacity>
 
-              {/* Tampilan Menu Dropdown (Meteora 1 & Meteora 2) */}
               {showDropdown && (
                 <View style={styles.dropdownMenu}>
                   <TouchableOpacity 
                     style={styles.dropdownItem} 
                     onPress={() => {
-                      setSelectedCabang('Meteora 1'); // Ubah cabang ke Meteora 1
-                      setShowDropdown(false); // Tutup dropdown
+                      setSelectedCabang('Meteora 1'); 
+                      setShowDropdown(false); 
                     }}
                   >
                     <Text style={styles.dropdownItemText}>Meteora 1</Text>
@@ -86,8 +84,8 @@ export default function DashboardScreen({ route }) {
                   <TouchableOpacity 
                     style={styles.dropdownItem} 
                     onPress={() => {
-                      setSelectedCabang('Meteora 2'); // Ubah cabang ke Meteora 2
-                      setShowDropdown(false); // Tutup dropdown
+                      setSelectedCabang('Meteora 2'); 
+                      setShowDropdown(false); 
                     }}
                   >
                     <Text style={styles.dropdownItemText}>Meteora 2</Text>
@@ -96,7 +94,8 @@ export default function DashboardScreen({ route }) {
               )}
             </View>
             
-            <TouchableOpacity>
+            {/* PERBAIKAN NAVIGASI 2: Pasang fungsi onPress untuk Owner (Header Kanan) */}
+            <TouchableOpacity onPress={() => navigation.navigate('Profile', { user })}>
               <Ionicons name="person-circle-outline" size={32} color="#333" />
             </TouchableOpacity>
           </View>
@@ -113,7 +112,6 @@ export default function DashboardScreen({ route }) {
         <View style={styles.mainCard}>
           <View>
             <Text style={styles.cardLabel}>TOTAL INVENTORY</Text>
-            {/* Tampilkan angka dinamis dari database */}
             <Text style={styles.cardValue}>{totalInventory} <Text style={styles.cardItemsText}>items</Text></Text>
             <Text style={styles.cardSub}>Data Real-Time MySQL</Text>
           </View>
@@ -166,8 +164,8 @@ export default function DashboardScreen({ route }) {
           <Text style={{textAlign: 'center', marginTop: 20, color: '#888'}}>Tidak ada data {activeCategory}</Text>
         ) : (
           filteredItems.map((item) => {
-            const currentStock = item.jumlah_stok || 0; // Baca kolom stok, jika null jadikan 0
-            const isAlert = currentStock < 5; // Syarat warning merah
+            const currentStock = item.jumlah_stok || 0; 
+            const isAlert = currentStock < 5; 
 
             return (
               <View 
@@ -184,7 +182,6 @@ export default function DashboardScreen({ route }) {
                   </View>
                   <View>
                     <Text style={styles.itemName}>{item.nama_barang}</Text>
-                    {/* Menggunakan nama_barang untuk subtitel agar tidak kosong */}
                     <Text style={[styles.itemSub, isAlert && { color: '#E53935' }]}>
                       {isAlert ? 'Low Stock Alert' : item.kategori}
                     </Text>
@@ -216,7 +213,10 @@ export default function DashboardScreen({ route }) {
         {isOwner ? (
           <TouchableOpacity><Ionicons name="time" size={24} color="#888" /></TouchableOpacity> 
         ) : (
-          <TouchableOpacity><Ionicons name="person" size={24} color="#888" /></TouchableOpacity> 
+          /* PERBAIKAN NAVIGASI 3: Pasang fungsi onPress untuk Staff (Bottom Nav Kanan) */
+          <TouchableOpacity onPress={() => navigation.navigate('Profile', { user })}>
+            <Ionicons name="person" size={24} color="#888" />
+          </TouchableOpacity> 
         )}
       </View>
 
