@@ -1,53 +1,59 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from './DashboardStyles';
 
 // PERBAIKAN NAVIGASI 1: Tambahkan 'navigation' di parameter fungsi
 export default function DashboardScreen({ route, navigation }) {
-  const { user } = route.params; 
-  
+  const user = route?.params?.user || {}; // Pastikan menangkap data user dengan benar 
+
   const isOwner = user.role?.toLowerCase() === 'owner' || user.cabang?.toLowerCase() === 'all';
-  
+
   // Jika Owner, default Meteora 1. Jika Staff, sesuaikan dengan cabangnya sendiri!
   const [selectedCabang, setSelectedCabang] = useState(isOwner ? 'Meteora 1' : user.cabang);
-  
+
   // STATE BARU: Untuk mengontrol buka/tutup menu Dropdown Combo Box
   const [showDropdown, setShowDropdown] = useState(false);
-  
+
   const [activeCategory, setActiveCategory] = useState('Minuman');
   const [items, setItems] = useState([]);
 
-  useEffect(() => {
-    const fetchInventory = async () => {
-      try {
-        const response = await fetch('http://192.168.1.22:3000/api/items'); 
-        const result = await response.json();
+  // --- KELUARKAN FUNGSI FETCH AGAR BISA DIAKSES GLOBAL DI KOMPONEN INI ---
+  const fetchInventory = async () => {
+    try {
+      const response = await fetch('http://192.168.1.22:3000/api/items');
+      const result = await response.json();
 
-        if (response.ok) {
-          setItems(result.data);
-        } else {
-          Alert.alert('Gagal Mengambil Data', result.message || 'Terjadi kesalahan');
-        }
-      } catch (error) {
-        console.error("Error Fetch Inventory:", error);
+      if (response.ok) {
+        setItems(result.data);
+      } else {
+        Alert.alert('Gagal Mengambil Data', result.message || 'Terjadi kesalahan');
       }
-    };
+    } catch (error) {
+      console.error("Error Fetch Inventory:", error);
+    }
+  };
 
-    fetchInventory();
-  }, []); 
+  // --- GUNAKAN USEFOCUSEFFECT SEBAGAI PENGGANTI USEEFFECT ---
+  // Ini akan mengambil data saat aplikasi pertama dibuka DAN setiap kali kembali ke menu ini
+  useFocusEffect(
+    useCallback(() => {
+      fetchInventory();
+    }, [])
+  );
 
   // --- LOGIKA FILTER CABANG & KATEGORI ---
   const branchItems = items.filter(item => item.cabang?.toLowerCase() === selectedCabang?.toLowerCase());
   const filteredItems = branchItems.filter(item => item.kategori === activeCategory);
-  
+
   const totalInventory = branchItems.length;
-  const lowStockCount = branchItems.filter(item => (item.jumlah_stok || 0) < 5).length; 
+  const lowStockCount = branchItems.filter(item => (item.jumlah_stok || 0) < 5).length;
   const safeStockCount = totalInventory - lowStockCount;
 
   return (
     <View style={styles.container}>
-      
+
       {/* --- HEADER --- */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -57,35 +63,35 @@ export default function DashboardScreen({ route, navigation }) {
             <Text style={styles.headerTitleBottom}>Meteora</Text>
           </View>
         </View>
-        
+
         {isOwner ? (
           <View style={styles.headerRight}>
-            
+
             <View style={{ position: 'relative', zIndex: 10 }}>
-              <TouchableOpacity 
-                style={styles.pickerContainer} 
-                onPress={() => setShowDropdown(!showDropdown)} 
+              <TouchableOpacity
+                style={styles.pickerContainer}
+                onPress={() => setShowDropdown(!showDropdown)}
               >
                 <Text style={styles.pickerText}>{selectedCabang} ▼</Text>
               </TouchableOpacity>
 
               {showDropdown && (
                 <View style={styles.dropdownMenu}>
-                  <TouchableOpacity 
-                    style={styles.dropdownItem} 
+                  <TouchableOpacity
+                    style={styles.dropdownItem}
                     onPress={() => {
-                      setSelectedCabang('Meteora 1'); 
-                      setShowDropdown(false); 
+                      setSelectedCabang('Meteora 1');
+                      setShowDropdown(false);
                     }}
                   >
                     <Text style={styles.dropdownItemText}>Meteora 1</Text>
                   </TouchableOpacity>
-                  
-                  <TouchableOpacity 
-                    style={styles.dropdownItem} 
+
+                  <TouchableOpacity
+                    style={styles.dropdownItem}
                     onPress={() => {
-                      setSelectedCabang('Meteora 2'); 
-                      setShowDropdown(false); 
+                      setSelectedCabang('Meteora 2');
+                      setShowDropdown(false);
                     }}
                   >
                     <Text style={styles.dropdownItemText}>Meteora 2</Text>
@@ -93,7 +99,7 @@ export default function DashboardScreen({ route, navigation }) {
                 </View>
               )}
             </View>
-            
+
             {/* PERBAIKAN NAVIGASI 2: Pasang fungsi onPress untuk Owner (Header Kanan) */}
             <TouchableOpacity onPress={() => navigation.navigate('Profile', { user })}>
               <Ionicons name="person-circle-outline" size={32} color="#333" />
@@ -107,7 +113,7 @@ export default function DashboardScreen({ route, navigation }) {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        
+
         {/* TOTAL INVENTORY CARD DENGAN DATA ASLI */}
         <View style={styles.mainCard}>
           <View>
@@ -128,27 +134,31 @@ export default function DashboardScreen({ route, navigation }) {
           </View>
           <View style={styles.tile}>
             <Text style={styles.tileLabel}>SAFE STOCK</Text>
-            <Text style={[styles.tileValueYellow, {color: '#2E7D32'}]}>
+            <Text style={[styles.tileValueYellow, { color: '#2E7D32' }]}>
               {safeStockCount < 10 ? `0${safeStockCount}` : safeStockCount}
             </Text>
           </View>
         </View>
 
         {/* KATEGORI TABS */}
-        <View style={styles.categoryRow}>
-          <TouchableOpacity 
-            style={activeCategory === 'Minuman' ? styles.btnCategoryActive : styles.btnCategoryInactive}
-            onPress={() => setActiveCategory('Minuman')}
+        <View style={styles.categoryWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 20 }}
           >
-            <Text style={activeCategory === 'Minuman' ? styles.txtCategoryActive : styles.txtCategoryInactive}>Minuman</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={activeCategory === 'Makanan' ? styles.btnCategoryActive : styles.btnCategoryInactive}
-            onPress={() => setActiveCategory('Makanan')}
-          >
-            <Text style={activeCategory === 'Makanan' ? styles.txtCategoryActive : styles.txtCategoryInactive}>Makanan</Text>
-          </TouchableOpacity>
+            {['Minuman', 'Makanan', 'Snack', 'Bahan Baku'].map((cat, index) => (
+              <TouchableOpacity
+                key={index}
+                style={activeCategory === cat ? styles.btnCategoryActive : styles.btnCategoryInactive}
+                onPress={() => setActiveCategory(cat)}
+              >
+                <Text style={activeCategory === cat ? styles.txtCategoryActive : styles.txtCategoryInactive}>
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
 
         {/* LIST BARANG */}
@@ -161,23 +171,23 @@ export default function DashboardScreen({ route, navigation }) {
 
         {/* --- RENDER DATA MYSQL KE LAYAR --- */}
         {filteredItems.length === 0 ? (
-          <Text style={{textAlign: 'center', marginTop: 20, color: '#888'}}>Tidak ada data {activeCategory}</Text>
+          <Text style={{ textAlign: 'center', marginTop: 20, color: '#888' }}>Tidak ada data {activeCategory}</Text>
         ) : (
           filteredItems.map((item) => {
-            const currentStock = item.jumlah_stok || 0; 
-            const isAlert = currentStock < 5; 
+            const currentStock = item.jumlah_stok || 0;
+            const isAlert = currentStock < 5;
 
             return (
-              <View 
-                key={item.id_barang.toString()} 
+              <View
+                key={item.id_barang.toString()}
                 style={[styles.itemCard, isAlert && { borderColor: '#E53935', borderWidth: 1, borderLeftWidth: 5 }]}
               >
                 <View style={styles.itemLeft}>
                   <View style={[styles.iconPlaceholder, isAlert && { backgroundColor: '#FFEBEE' }]}>
-                    <Ionicons 
-                      name={item.kategori === 'Minuman' ? 'cafe-outline' : 'fast-food-outline'} 
-                      size={20} 
-                      color={isAlert ? '#E53935' : '#888'} 
+                    <Ionicons
+                      name={item.kategori === 'Minuman' ? 'cafe-outline' : 'fast-food-outline'}
+                      size={20}
+                      color={isAlert ? '#E53935' : '#888'}
                     />
                   </View>
                   <View>
@@ -195,30 +205,9 @@ export default function DashboardScreen({ route, navigation }) {
             );
           })
         )}
-        
+
         <View style={{ height: 100 }} />
       </ScrollView>
-
-      {/* --- BOTTOM GROUP NAVIGATION --- */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity><Ionicons name="grid" size={24} color="#FFCC00" /></TouchableOpacity> 
-        <TouchableOpacity><Ionicons name="download-outline" size={24} color="#888" /></TouchableOpacity> 
-        
-        <TouchableOpacity style={styles.fab}>
-          <Ionicons name="add" size={32} color="#FFCC00" /> 
-        </TouchableOpacity> 
-
-        <TouchableOpacity><Ionicons name="share-outline" size={24} color="#888" /></TouchableOpacity> 
-        
-        {isOwner ? (
-          <TouchableOpacity><Ionicons name="time" size={24} color="#888" /></TouchableOpacity> 
-        ) : (
-          /* PERBAIKAN NAVIGASI 3: Pasang fungsi onPress untuk Staff (Bottom Nav Kanan) */
-          <TouchableOpacity onPress={() => navigation.navigate('Profile', { user })}>
-            <Ionicons name="person" size={24} color="#888" />
-          </TouchableOpacity> 
-        )}
-      </View>
 
     </View>
   );

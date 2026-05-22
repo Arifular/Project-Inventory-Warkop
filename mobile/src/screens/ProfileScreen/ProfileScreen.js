@@ -1,30 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView, Alert, Switch } from 'react-native';
+// PERUBAHAN: Tambahkan import Modal
+import { View, Text, TouchableOpacity, Image, ScrollView, Switch, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { styles } from './ProfileStyles'; // Import style terpisah
+import { styles } from './ProfileStyles';
 
 export default function ProfileScreen({ route, navigation }) {
   const { user } = route.params;
   const isOwner = user?.role?.toLowerCase() === 'owner' || user?.cabang?.toLowerCase() === 'all';
 
-  // State untuk Switch UI Pengaturan Aplikasi
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isNotifEnabled, setIsNotifEnabled] = useState(true);
+  
+  // STATE BARU: Untuk mengontrol tampilnya Custom Modal Logout
+  const [isLogoutModalVisible, setLogoutModalVisible] = useState(false);
 
-  // --- FUNGSI LOGOUT ---
-  const handleLogout = () => {
-    Alert.alert(
-      "Konfirmasi Logout",
-      "Apakah Anda yakin ingin keluar?",
-      [
-        { text: "Batal", style: "cancel" },
-        { 
-          text: "Keluar", 
-          onPress: () => navigation.replace('Login'),
-          style: 'destructive'
-        }
-      ]
-    );
+  // Fungsi saat tombol "Ya, Keluar" di modal ditekan
+  const executeLogout = () => {
+    setLogoutModalVisible(false); // Tutup modal dulu
+    navigation.replace('Login');  // Eksekusi pindah layar
   };
 
   return (
@@ -40,18 +33,14 @@ export default function ProfileScreen({ route, navigation }) {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         
         {/* BAGIAN FOTO DAN IDENTITAS */}
-    <View style={styles.profileSection}>
+        <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            {/* Render gambar sesuai role */}
             <Image 
               source={isOwner ? require('../../../assets/owner.jpg') : require('../../../assets/staff.jpg')} 
               style={styles.avatarImg} 
             />
           </View>
-          
-          {/* PERBAIKAN: Hapus kondisi isOwner, panggil username secara langsung */}
           <Text style={styles.nameText}>{user?.username}</Text>
-          
           <View style={styles.badgeContainer}>
             <View style={styles.roleBadge}>
               <Text style={styles.roleText}>{isOwner ? 'Owner' : 'Staff'}</Text>
@@ -59,64 +48,50 @@ export default function ProfileScreen({ route, navigation }) {
             <Text style={styles.dot}>•</Text>
             <Text style={styles.warkopText}>Warkop Meteora</Text>
           </View>
-    </View>
+        </View>
 
-        {/* DAFTAR MENU (Tergantung Role) */}
+        {/* DAFTAR MENU */}
         <View style={styles.menuContainer}>
-          
-          {/* 1. Ganti Password (Semua Role) */}
           <TouchableOpacity style={styles.menuCard} onPress={() => navigation.navigate('ChangePwd', { user })}>
-            <View style={styles.iconBox}>
-              <Ionicons name="lock-closed-outline" size={22} color="#B8860B" />
-            </View>
+            <View style={styles.iconBox}><Ionicons name="lock-closed-outline" size={22} color="#B8860B" /></View>
             <Text style={styles.menuText}>Ganti Password</Text>
             <Ionicons name="chevron-forward" size={20} color="#CCC" />
           </TouchableOpacity>
 
-          {/* Menu Khusus Owner */}
           {isOwner && (
             <>
-              {/* 2. Tambah User Baru */}
               <TouchableOpacity style={styles.menuCard} onPress={() => navigation.navigate('AddUser', { user })}>
-                <View style={styles.iconBox}>
-                  <Ionicons name="person-add-outline" size={22} color="#B8860B" />
-                </View>
+                <View style={styles.iconBox}><Ionicons name="person-add-outline" size={22} color="#B8860B" /></View>
                 <Text style={styles.menuText}>Tambah User Baru</Text>
                 <Ionicons name="chevron-forward" size={20} color="#CCC" />
               </TouchableOpacity>
-
-              {/* 3. Ganti Password Staff */}
               <TouchableOpacity style={styles.menuCard} onPress={() => navigation.navigate('ChangeStaffPwd', { user })}>
-                <View style={styles.iconBox}>
-                  <Ionicons name="shield-checkmark-outline" size={22} color="#B8860B" />
-                </View>
+                <View style={styles.iconBox}><Ionicons name="shield-checkmark-outline" size={22} color="#B8860B" /></View>
                 <Text style={styles.menuText}>Ganti Password Staff</Text>
                 <Ionicons name="chevron-forward" size={20} color="#CCC" />
               </TouchableOpacity>
-
-              {/* 4. Hapus User */}
               <TouchableOpacity style={styles.menuCard} onPress={() => navigation.navigate('DeleteUser', { user })}>
-                <View style={[styles.iconBox, styles.iconBoxRed]}>
-                  <Ionicons name="person-remove-outline" size={22} color="#D32F2F" />
-                </View>
+                <View style={[styles.iconBox, styles.iconBoxRed]}><Ionicons name="person-remove-outline" size={22} color="#D32F2F" /></View>
                 <Text style={styles.menuText}>Hapus User</Text>
                 <Ionicons name="chevron-forward" size={20} color="#CCC" />
               </TouchableOpacity>
             </>
           )}
 
-          {/* 5. Tombol Keluar (Semua Role) */}
-          <TouchableOpacity style={[styles.menuCard, styles.menuCardRed]} onPress={handleLogout}>
+          {/* TOMBOL LOGOUT (Memicu Modal Muncul) */}
+          <TouchableOpacity 
+            style={[styles.menuCard, styles.menuCardRed]} 
+            onPress={() => setLogoutModalVisible(true)}
+          >
             <View style={[styles.iconBox, styles.iconBoxRed]}>
               <Ionicons name="log-out-outline" size={22} color="#D32F2F" />
             </View>
             <Text style={[styles.menuText, styles.menuTextRed]}>Keluar</Text>
           </TouchableOpacity>
 
-          {/* --- PENGATURAN APLIKASI --- */}
+          {/* PENGATURAN APLIKASI */}
           <Text style={styles.sectionTitle}>PENGATURAN APLIKASI</Text>
           <View style={styles.settingsCard}>
-            
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
                 <Ionicons name="moon-outline" size={24} color="#555" />
@@ -129,9 +104,7 @@ export default function ProfileScreen({ route, navigation }) {
                 value={isDarkMode}
               />
             </View>
-            
             <View style={styles.divider} />
-
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
                 <Ionicons name="notifications-outline" size={24} color="#555" />
@@ -144,16 +117,45 @@ export default function ProfileScreen({ route, navigation }) {
                 value={isNotifEnabled}
               />
             </View>
-
           </View>
 
-          {/* FOOTER */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Warkop Meteora v.1{'\n'}© 2026</Text>
           </View>
-
         </View>
       </ScrollView>
+
+      {/* --- KOMPONEN CUSTOM MODAL LOGOUT --- */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={isLogoutModalVisible}
+        onRequestClose={() => setLogoutModalVisible(false)} // Menutup modal jika tombol back Android ditekan
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            
+            <View style={styles.modalIconCircle}>
+              <Ionicons name="alert-circle" size={32} color="#D32F2F" />
+            </View>
+            
+            <Text style={styles.modalTitle}>Konfirmasi Keluar</Text>
+            <Text style={styles.modalSubtitle}>
+              Apakah Anda yakin ingin keluar dari sesi saat ini? Anda harus login kembali untuk masuk.
+            </Text>
+
+            <TouchableOpacity style={styles.btnModalPrimary} onPress={executeLogout}>
+              <Text style={styles.btnModalPrimaryText}>Ya, Keluar</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.btnModalSecondary} onPress={() => setLogoutModalVisible(false)}>
+              <Text style={styles.btnModalSecondaryText}>Tidak</Text>
+            </TouchableOpacity>
+
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 }
