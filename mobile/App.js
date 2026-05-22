@@ -25,10 +25,13 @@ import InputBarangScreen from './src/screens/InputBarangScreen/InputBarangScreen
 import RestockScreen from './src/screens/RestockScreen/RestockScreen';
 
 // IMPORT HALAMAN HALAMAN SEMENTARA (Kamu bisa buat file ini nanti, untuk sementara tampilkan "Under Construction" atau sejenisnya)
-//import HistoryScreen from './src/screens/HistoryScreen/HistoryScreen';
+import HistoryScreen from './src/screens/HistoryScreen/HistoryScreen';
 import OutputScreen from './src/screens/OutputScreen/OutputScreen';
-import HistoryScreen from './src/screens/HistoryScreen';
-// import OutputScreen from './src/screens/OutputScreen';
+
+import HistoryInputScreen from './src/screens/HistoryInputScreen/HistoryInputScreen';
+import HistoryOutputScreen from './src/screens/HistoryOutputScreen/HistoryOutputScreen';
+import AllHistoryScreen from './src/screens/AllHistoryScreen/AllHistoryScreen';
+
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -159,6 +162,9 @@ export default function App() {
         <Stack.Screen name="InputBarangBaru" component={InputBarangScreen} />
 
         <Stack.Screen name="RestockBarang" component={RestockScreen} />
+        <Stack.Screen name="HistoryInputScreen" component={HistoryInputScreen} options={{headerShown: false}} />
+        <Stack.Screen name="HistoryOutputScreen" component={HistoryOutputScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="AllHistoryScreen" component={AllHistoryScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
