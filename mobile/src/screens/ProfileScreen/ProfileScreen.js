@@ -136,7 +136,7 @@ export default function ProfileScreen({ route, navigation }) {
           <View style={styles.modalContainer}>
             
             <View style={styles.modalIconCircle}>
-              <Ionicons name="alert-triangle" size={32} color="#D32F2F" />
+              <Ionicons name="alert-circle" size={32} color="#D32F2F" />
             </View>
             
             <Text style={styles.modalTitle}>Konfirmasi Keluar</Text>
