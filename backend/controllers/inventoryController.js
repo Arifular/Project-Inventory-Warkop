@@ -32,8 +32,9 @@ exports.barangMasuk = (req, res) => {
                 db.query(queryStok, [newIdBarang, jumlah, cabang], (err) => {
                     if (err) return db.rollback(() => res.status(500).json({ error: "Gagal simpan saldo stok: " + err.message }));
 
-                    const queryHistori = "INSERT INTO tb_riwayat (id_barang, id_user, jenis_transaksi, jumlah, tanggal) VALUES (?, ?, 'masuk', ?, NOW())";
-                    db.query(queryHistori, [newIdBarang, id_user, jumlah], (err) => {
+                    // PERBAIKAN 1: Tambah kolom cabang untuk barang baru
+                    const queryHistori = "INSERT INTO tb_riwayat (id_barang, id_user, jenis_transaksi, jumlah, tanggal, cabang) VALUES (?, ?, 'Masuk', ?, NOW(), ?)";
+                    db.query(queryHistori, [newIdBarang, id_user, jumlah, cabang], (err) => {
                         if (err) return db.rollback(() => res.status(500).json({ error: "Gagal mencatat histori: " + err.message }));
 
                         db.commit((err) => {
@@ -55,8 +56,9 @@ exports.barangMasuk = (req, res) => {
                     db.query(queryInsertStokBaru, [id_barang, jumlah, cabang], (err) => {
                         if (err) return db.rollback(() => res.status(500).json({ error: "Gagal membuat data stok cabang baru." }));
 
-                        const queryHistori = "INSERT INTO tb_riwayat (id_barang, id_user, jenis_transaksi, jumlah, tanggal) VALUES (?, ?, 'masuk', ?, NOW())";
-                        db.query(queryHistori, [id_barang, id_user, jumlah], (err) => {
+                        // PERBAIKAN 2: Tambah kolom cabang untuk restock (stok cabang baru)
+                        const queryHistori = "INSERT INTO tb_riwayat (id_barang, id_user, jenis_transaksi, jumlah, tanggal, cabang) VALUES (?, ?, 'Masuk', ?, NOW(), ?)";
+                        db.query(queryHistori, [id_barang, id_user, jumlah, cabang], (err) => {
                             if (err) return db.rollback(() => res.status(500).json({ error: "Gagal mencatat histori restock: " + err.message }));
 
                             db.commit((err) => {
@@ -66,8 +68,9 @@ exports.barangMasuk = (req, res) => {
                         });
                     });
                 } else {
-                    const queryHistori = "INSERT INTO tb_riwayat (id_barang, id_user, jenis_transaksi, jumlah, tanggal) VALUES (?, ?, 'masuk', ?, NOW())";
-                    db.query(queryHistori, [id_barang, id_user, jumlah], (err) => {
+                    // PERBAIKAN 3: Tambah kolom cabang untuk restock (stok cabang sudah ada)
+                    const queryHistori = "INSERT INTO tb_riwayat (id_barang, id_user, jenis_transaksi, jumlah, tanggal, cabang) VALUES (?, ?, 'Masuk', ?, NOW(), ?)";
+                    db.query(queryHistori, [id_barang, id_user, jumlah, cabang], (err) => {
                         if (err) return db.rollback(() => res.status(500).json({ error: "Gagal mencatat histori restock: " + err.message }));
 
                         db.commit((err) => {
@@ -118,7 +121,7 @@ exports.barangKeluar = (req, res) => {
         if (err) return res.status(500).json({ error: "Gagal memulai transaksi database." });
 
         const queryKurangStok = "UPDATE tb_stok SET jumlah_stok = jumlah_stok - ? WHERE id_barang = ? AND cabang = ?";
-        
+
         db.query(queryKurangStok, [jumlah, id_barang, cabang], (err, resultUpdate) => {
             if (err) return db.rollback(() => res.status(500).json({ error: "Gagal memotong saldo stok: " + err.message }));
 
@@ -126,9 +129,11 @@ exports.barangKeluar = (req, res) => {
                 return db.rollback(() => res.status(404).json({ error: "Data stok barang di cabang ini tidak ditemukan." }));
             }
 
-            const queryHistori = "INSERT INTO tb_riwayat (id_barang, id_user, jenis_transaksi, jumlah, tanggal) VALUES (?, ?, 'keluar', ?, NOW())";
-            
-            db.query(queryHistori, [id_barang, id_user, jumlah], (err) => {
+            // PERBAIKAN: Menambahkan kolom 'cabang' dan menggunakan huruf kapital 'Keluar'
+            const queryHistori = "INSERT INTO tb_riwayat (id_barang, id_user, jenis_transaksi, jumlah, tanggal, cabang) VALUES (?, ?, 'Keluar', ?, NOW(), ?)";
+
+            // PERBAIKAN: Memasukkan variabel 'cabang' ke dalam susunan array parameter query
+            db.query(queryHistori, [id_barang, id_user, jumlah, cabang], (err) => {
                 if (err) return db.rollback(() => res.status(500).json({ error: "Gagal mencatat histori pengeluaran: " + err.message }));
 
                 db.commit((err) => {
@@ -137,6 +142,60 @@ exports.barangKeluar = (req, res) => {
                 });
             });
         });
+    });
+};
+
+// --- FITUR MENGAMBIL RIWAYAT TRANSAKSI (HISTORY) ---
+exports.getHistory = (req, res) => {
+    // Menangkap parameter filter dari URL (Query String)
+    const { startDate, endDate, cabang, jenis_transaksi } = req.query;
+
+    // Query dasar dengan JOIN ke tb_barang dan tb_users
+    // Sesuaikan 'u.username' dengan nama kolom di tabel tb_users milikmu (misal: u.nama_lengkap atau u.nama)
+    let query = `
+        SELECT 
+            r.id_transaksi, 
+            b.nama_barang, 
+            r.jumlah, 
+            r.jenis_transaksi, 
+            r.tanggal, 
+            r.cabang, 
+            u.username AS pic 
+        FROM tb_riwayat r
+        JOIN tb_barang b ON r.id_barang = b.id_barang
+        JOIN tb_user u ON r.id_user = u.id_user
+        WHERE 1=1
+    `;
+
+    let queryParams = [];
+
+    // 1. Filter Tanggal (Jika ada)
+    if (startDate && endDate) {
+        // Tambahkan 23:59:59 pada endDate agar mencakup transaksi hingga akhir hari tersebut
+        query += ` AND r.tanggal >= ? AND r.tanggal <= ?`;
+        queryParams.push(`${startDate} 00:00:00`, `${endDate} 23:59:59`);
+    }
+
+    // 2. Filter Cabang (Jika ada dan bukan 'All')
+    if (cabang && cabang.toLowerCase() !== 'all') {
+        query += ` AND r.cabang = ?`;
+        queryParams.push(cabang);
+    }
+
+    // 3. Filter Jenis Transaksi (Masuk / Keluar)
+    if (jenis_transaksi) {
+        query += ` AND r.jenis_transaksi = ?`;
+        queryParams.push(jenis_transaksi);
+    }
+
+    // Urutkan dari yang paling baru
+    query += ` ORDER BY r.tanggal DESC`;
+
+    db.query(query, queryParams, (err, results) => {
+        if (err) {
+            return res.status(500).json({ message: "Gagal mengambil data riwayat", error: err.message });
+        }
+        return res.status(200).json({ data: results });
     });
 };
 // Tidak perlu module.exports di bawah lagi karena sudah pakai exports.barangMasuk di atas
