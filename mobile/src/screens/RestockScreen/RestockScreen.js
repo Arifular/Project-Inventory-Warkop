@@ -89,7 +89,7 @@ export default function RestockScreen({ route, navigation }) {
       // Menggunakan Promise.all agar mengirimkan perulangan API secara paralel
       await Promise.all(itemsToSubmit.map(async (id_barang) => {
         const jumlahTambah = restockCart[id_barang];
-        
+
         await fetch('http://192.168.1.22:3000/api/inventory/in', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
