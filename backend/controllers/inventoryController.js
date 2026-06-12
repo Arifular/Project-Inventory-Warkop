@@ -198,4 +198,24 @@ exports.getHistory = (req, res) => {
         return res.status(200).json({ data: results });
     });
 };
+
+exports.getLowStock = (req, res) => {
+    // Kita set batas aman (threshold) misalnya 10. Bisa disesuaikan nanti.
+    const query = `
+        SELECT b.nama_barang, s.jumlah_stok, s.cabang, b.kategori 
+        FROM tb_stok s
+        JOIN tb_barang b ON s.id_barang = b.id_barang
+        WHERE s.jumlah_stok <= 10
+        ORDER BY s.jumlah_stok ASC
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) return res.status(500).json({ error: "Gagal mengambil data stok menipis: " + err.message });
+        
+        return res.status(200).json({
+            message: "Berhasil mengambil data low stock",
+            data: results
+        });
+    });
+};
 // Tidak perlu module.exports di bawah lagi karena sudah pakai exports.barangMasuk di atas

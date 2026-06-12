@@ -26,6 +26,7 @@ app.get('/', (req, res) => {
     res.send('Backend Meteora Siap!');
 });
 
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server Warkop Meteora menyala di port ${PORT}`);
 });

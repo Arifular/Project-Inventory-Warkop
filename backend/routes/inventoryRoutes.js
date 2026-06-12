@@ -7,4 +7,6 @@ router.get('/', inventoryController.getItems);
 router.post('/out', inventoryController.barangKeluar); // Rute baru untuk Output
 router.get('/history', inventoryController.getHistory);
 
+router.get('/low-stock', inventoryController.getLowStock);
+
 module.exports = router; // <--- PASTIKAN BARIS INI ADA

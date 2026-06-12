@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView, Switch, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ScrollView, Switch, Modal, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications'; // IMPORT LIBRARY NOTIFIKASI
 import { styles } from './ProfileStyles';
+
+// KONFIGURASI NOTIFIKASI SISTEM
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 export default function ProfileScreen({ route, navigation }) {
   const { user } = route.params;
@@ -15,10 +25,52 @@ export default function ProfileScreen({ route, navigation }) {
   const [notifikasi, setNotifikasi] = useState([]);
   const [loadingNotif, setLoadingNotif] = useState(false);
 
+  // MEMINTA IZIN NOTIFIKASI SAAT LAYAR DIBUKA
+  useEffect(() => {
+    async function requestNotificationPermission() {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== 'granted') {
+        // Jika ditolak, notifikasi sistem tidak akan bunyi (tapi UI dalam app tetap jalan)
+        console.log('Izin notifikasi ditolak pengguna.');
+      }
+    }
+    requestNotificationPermission();
+  }, []);
+
+  // FUNGSI PEMICU NOTIFIKASI SISTEM (SEPERTI WA)
+  const triggerLocalNotification = async (items) => {
+    if (items.length === 0) return;
+
+    if (items.length === 1) {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '⚠️ Stok Kritis Warkop Meteora!',
+          body: `Bahan baku "${items[0].nama_barang}" tersisa ${items[0].jumlah_stok} lagi di ${items[0].cabang}.`,
+          sound: true,
+        },
+        trigger: null,
+      });
+    } else {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '⚠️ Peringatan: Banyak Stok Menipis!',
+          body: `Ada ${items.length} bahan baku yang sudah menyentuh batas aman. Segera lakukan restock!`,
+          sound: true,
+        },
+        trigger: null,
+      });
+    }
+  };
+
   const fetchNotifikasiStok = async () => {
     setLoadingNotif(true);
     try {
-      const response = await fetch(`http://10.178.109.201:3000/api/inventory/low-stock`);
+      const response = await fetch(`http://192.168.1.22:3000/api/inventory/low-stock`);
       const result = await response.json();
       
       if (response.ok) {
@@ -27,6 +79,11 @@ export default function ProfileScreen({ route, navigation }) {
           : result.data.filter(item => item.cabang?.toLowerCase() === user?.cabang?.toLowerCase());
           
         setNotifikasi(filteredData);
+
+        // PICU NOTIFIKASI SISTEM JIKA ADA DATA DAN TOGGLE MENYALA
+        if (filteredData.length > 0 && isNotifEnabled) {
+          triggerLocalNotification(filteredData);
+        }
       }
     } catch (error) {
       console.error("Gagal load notifikasi:", error);
