@@ -51,7 +51,7 @@ export default function HistoryOutputScreen({ navigation, route }) {
     setLoading(true);
     try {
       // Perhatikan parameter jenis_transaksi=Keluar
-      const url = `http://192.168.1.22:3000/api/inventory/history?jenis_transaksi=Keluar&cabang=${selectedCabang}&startDate=${startDate}&endDate=${endDate}`;
+      const url = `https://warkop.sikitom.my.id/api/inventory/history?jenis_transaksi=Keluar&cabang=${selectedCabang}&startDate=${startDate}&endDate=${endDate}`;
       const response = await fetch(url);
       const result = await response.json();
       if (response.ok) {

@@ -34,7 +34,7 @@ export default function RestockScreen({ route, navigation }) {
   useEffect(() => {
     const fetchInventory = async () => {
       try {
-        const response = await fetch('http://192.168.1.22:3000/api/items');
+        const response = await fetch('https://warkop.sikitom.my.id/api/items');
         const result = await response.json();
         if (response.ok) {
           // Hanya tampilkan barang dari cabang yang dipilih
@@ -90,7 +90,7 @@ export default function RestockScreen({ route, navigation }) {
       await Promise.all(itemsToSubmit.map(async (id_barang) => {
         const jumlahTambah = restockCart[id_barang];
 
-        await fetch('http://192.168.1.22:3000/api/inventory/in', {
+        await fetch('https://warkop.sikitom.my.id/api/inventory/in', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -23,7 +23,7 @@ export default function AddUserScreen({ navigation }) {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://192.168.1.22:3000/api/users/add-user', {
+      const response = await fetch('https://warkop.sikitom.my.id/api/users/add-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

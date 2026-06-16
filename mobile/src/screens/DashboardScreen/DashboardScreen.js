@@ -22,7 +22,7 @@ export default function DashboardScreen({ route, navigation }) {
   // --- KELUARKAN FUNGSI FETCH AGAR BISA DIAKSES GLOBAL DI KOMPONEN INI ---
   const fetchInventory = async () => {
     try {
-      const response = await fetch('http://192.168.1.22:3000/api/items');
+      const response = await fetch('https://warkop.sikitom.my.id/api/items');
       const result = await response.json();
 
       if (response.ok) {

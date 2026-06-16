@@ -26,7 +26,7 @@ export default function DeleteUserScreen({ navigation }) {
     setStaffList([]);
 
     try {
-      const response = await fetch(`http://192.168.1.22:3000/api/users/staff/${selectedCabang}`);
+      const response = await fetch(`https://warkop.sikitom.my.id/api/users/staff/${selectedCabang}`);
       const result = await response.json();
 
       if (response.ok) {
@@ -58,7 +58,7 @@ export default function DeleteUserScreen({ navigation }) {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`http://192.168.1.22:3000/api/users/delete-user/${selectedStaff.id_user}`, {
+      const response = await fetch(`https://warkop.sikitom.my.id/api/users/delete-user/${selectedStaff.id_user}`, {
         method: 'DELETE',
       });
 

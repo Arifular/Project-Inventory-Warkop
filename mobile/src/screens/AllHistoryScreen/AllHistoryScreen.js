@@ -49,7 +49,7 @@ export default function AllHistoryScreen({ navigation, route }) {
     setLoading(true);
     try {
       // Endpoint yang sama, tapi parameter cabang & jenis_transaksi dikosongkan agar terbaca 'Semua'
-      const url = `http://192.168.1.22:3000/api/inventory/history?startDate=${startDate}&endDate=${endDate}`;
+      const url = `https://warkop.sikitom.my.id/api/inventory/history?startDate=${startDate}&endDate=${endDate}`;
       const response = await fetch(url);
       const result = await response.json();
       
