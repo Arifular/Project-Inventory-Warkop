@@ -200,14 +200,14 @@ export default function ProfileScreen({ route, navigation }) {
 
           <Text style={styles.sectionTitle}>PENGATURAN APLIKASI</Text>
           <View style={styles.settingsCard}>
-            <View style={styles.settingRow}>
+            {/* <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
                 <Ionicons name="moon-outline" size={24} color="#555" />
                 <Text style={styles.settingText}>Mode Gelap</Text>
               </View>
               <Switch trackColor={{ false: "#D3D3D3", true: "#FFCC00" }} thumbColor={"#FFF"} onValueChange={() => setIsDarkMode(!isDarkMode)} value={isDarkMode} />
-            </View>
-            <View style={styles.divider} />
+            </View> */}
+            {/* <View style={styles.divider} /> */}
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
                 <Ionicons name="notifications-outline" size={24} color="#555" />
