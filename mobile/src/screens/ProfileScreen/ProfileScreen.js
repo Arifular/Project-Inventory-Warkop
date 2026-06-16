@@ -70,7 +70,7 @@ export default function ProfileScreen({ route, navigation }) {
   const fetchNotifikasiStok = async () => {
     setLoadingNotif(true);
     try {
-      const response = await fetch(`http://192.168.1.22:3000/api/inventory/low-stock`);
+      const response = await fetch(`https://warkop.sikitom.my.id/api/inventory/low-stock`);
       const result = await response.json();
       
       if (response.ok) {

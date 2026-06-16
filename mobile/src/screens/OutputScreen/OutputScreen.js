@@ -51,7 +51,7 @@ export default function OutputScreen({ route, navigation }) {
     const fetchInventory = async () => {
         setIsLoadingFetch(true);
         try {
-            const response = await fetch('http://192.168.1.22:3000/api/items');
+            const response = await fetch('https://warkop.sikitom.my.id/api/items');
             const result = await response.json();
             if (response.ok) {
                 // Filter berdasarkan selectedCabang
@@ -108,7 +108,7 @@ export default function OutputScreen({ route, navigation }) {
             await Promise.all(itemsToSubmit.map(async (id_barang) => {
                 const jumlahKeluar = outputCart[id_barang];
 
-                const response = await fetch('http://192.168.1.22:3000/api/inventory/out', {
+                const response = await fetch('https://warkop.sikitom.my.id/api/inventory/out', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

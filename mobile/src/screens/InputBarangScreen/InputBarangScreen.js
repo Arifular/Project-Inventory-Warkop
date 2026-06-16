@@ -31,7 +31,7 @@ export default function InputBarangScreen({ route, navigation }) {
 
     try {
       // Pastikan IP disesuaikan dengan IP terbarumu (.22)
-      const response = await fetch('http://192.168.1.22:3000/api/inventory/in', {
+      const response = await fetch('https://warkop.sikitom.my.id/api/inventory/in', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

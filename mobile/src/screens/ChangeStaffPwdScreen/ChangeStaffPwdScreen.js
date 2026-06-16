@@ -32,7 +32,7 @@ export default function ChangeStaffPwdScreen({ navigation }) {
 
     try {
       // Pastikan IP Address sama dengan laptopmu
-      const response = await fetch(`http://192.168.1.22:3000/api/users/staff/${selectedCabang}`);
+      const response = await fetch(`https://warkop.sikitom.my.id/api/users/staff/${selectedCabang}`);
       const result = await response.json();
 
       if (response.ok) {
@@ -63,7 +63,7 @@ export default function ChangeStaffPwdScreen({ navigation }) {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://192.168.1.22:3000/api/users/reset-staff-password', {
+      const response = await fetch('https://warkop.sikitom.my.id/api/users/reset-staff-password', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -30,7 +30,7 @@ export default function LoginScreen({ navigation }) {
 
     try {
       //2. Tembak API Backend menggunakan IP Wi-Fi Laptop
-      const response = await fetch('http://192.168.1.22:3000/api/auth/login', {
+      const response = await fetch('https://warkop.sikitom.my.id/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

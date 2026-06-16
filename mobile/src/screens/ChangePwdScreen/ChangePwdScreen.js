@@ -37,7 +37,7 @@ export default function ChangePwdScreen({ route, navigation }) {
 
     try {
       // PASTIKAN IP ADDRESS INI SAMA DENGAN IP LAPTOPMU
-      const response = await fetch('http://192.168.1.22:3000/api/users/change-password', {
+      const response = await fetch('https://warkop.sikitom.my.id/api/users/change-password', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
