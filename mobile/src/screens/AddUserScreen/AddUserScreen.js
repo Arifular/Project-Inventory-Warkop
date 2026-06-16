@@ -6,16 +6,25 @@ import { styles } from './AddUserStyles';
 export default function AddUserScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [cabang, setCabang] = useState(''); // State untuk pilihan cabang
   
-  const [showPwd, setShowPwd] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
+  // State untuk Cabang
+  const [cabang, setCabang] = useState('');
+  const [showDropdownCabang, setShowDropdownCabang] = useState(false);
   const listCabang = ['Meteora 1', 'Meteora 2'];
 
+  // State untuk Role
+  const [role, setRole] = useState('');
+  const [showDropdownRole, setShowDropdownRole] = useState(false);
+  const listRole = ['Admin', 'Staf']; 
+  
+  const [showPwd, setShowPwd] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleSimpan = async () => {
-    if (!username || !password || !cabang) {
+    // LOGIKA PINTAR: Jika role Admin, paksa payload cabang menjadi 'all'
+    const payloadCabang = role === 'Admin' ? 'all' : cabang;
+
+    if (!username || !password || !role || !payloadCabang) {
       Alert.alert('Peringatan', 'Semua kolom wajib diisi!');
       return;
     }
@@ -29,8 +38,8 @@ export default function AddUserScreen({ navigation }) {
         body: JSON.stringify({
           username: username,
           password: password,
-          cabang: cabang,
-          role: 'Staff' // Default role sesuai rancangan awal kita untuk menu ini
+          cabang: payloadCabang, // Kirim payload yang sudah difilter
+          role: role 
         }),
       });
 
@@ -41,7 +50,7 @@ export default function AddUserScreen({ navigation }) {
           { text: 'OK', onPress: () => navigation.goBack() }
         ]);
       } else {
-        Alert.alert('Gagal', result.message || 'Username sudah terdaftar.');
+        Alert.alert('Gagal', result.message || result.error || 'Username sudah terdaftar.');
       }
     } catch (error) {
       console.error(error);
@@ -98,28 +107,34 @@ export default function AddUserScreen({ navigation }) {
             </View>
           </View>
 
-          {/* PILIH CABANG (DROPDOWN CUSTOM) */}
+          {/* PILIH ROLE */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Pilih Cabang</Text>
+            <Text style={styles.label}>Pilih Role</Text>
             <TouchableOpacity 
               style={styles.dropdownTrigger} 
-              onPress={() => setShowDropdown(!showDropdown)}
+              onPress={() => {
+                setShowDropdownRole(!showDropdownRole);
+                setShowDropdownCabang(false); 
+              }}
             >
-              <Text style={cabang ? styles.dropdownText : styles.dropdownPlaceholder}>
-                {cabang ? cabang : 'Pilih cabang'}
+              <Text style={role ? styles.dropdownText : styles.dropdownPlaceholder}>
+                {role ? role : 'Pilih role'}
               </Text>
-              <Ionicons name={showDropdown ? "chevron-up" : "chevron-down"} size={20} color="#666" />
+              <Ionicons name={showDropdownRole ? "chevron-up" : "chevron-down"} size={20} color="#666" />
             </TouchableOpacity>
 
-            {showDropdown && (
+            {showDropdownRole && (
               <View style={styles.dropdownList}>
-                {listCabang.map((item, index) => (
+                {listRole.map((item, index) => (
                   <TouchableOpacity 
                     key={index} 
                     style={styles.dropdownItem}
                     onPress={() => {
-                      setCabang(item);
-                      setShowDropdown(false);
+                      setRole(item);
+                      setShowDropdownRole(false);
+                      // Reset cabang jika user tiba-tiba mengganti pilihan role
+                      if(item === 'Admin') setCabang('all');
+                      else setCabang('');
                     }}
                   >
                     <Text style={styles.dropdownItemText}>{item}</Text>
@@ -128,6 +143,51 @@ export default function AddUserScreen({ navigation }) {
               </View>
             )}
           </View>
+
+          {/* LOGIKA PERUBAHAN TAMPILAN CABANG */}
+          {role === 'Admin' ? (
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Cabang Akses</Text>
+              {/* Tampilan input palsu yang dikunci (disabled) */}
+              <View style={[styles.inputWrapper, { backgroundColor: '#EFEFEF', justifyContent: 'center' }]}>
+                <Text style={{ color: '#555', fontSize: 14 }}>Semua Cabang (Akses Penuh)</Text>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Pilih Cabang</Text>
+              <TouchableOpacity 
+                style={styles.dropdownTrigger} 
+                onPress={() => {
+                  setShowDropdownCabang(!showDropdownCabang);
+                  setShowDropdownRole(false); 
+                }}
+              >
+                {/* Pastikan 'all' tidak tertampil sebagai text jika sempat tersimpan */}
+                <Text style={cabang && cabang !== 'all' ? styles.dropdownText : styles.dropdownPlaceholder}>
+                  {cabang && cabang !== 'all' ? cabang : 'Pilih cabang'}
+                </Text>
+                <Ionicons name={showDropdownCabang ? "chevron-up" : "chevron-down"} size={20} color="#666" />
+              </TouchableOpacity>
+
+              {showDropdownCabang && (
+                <View style={styles.dropdownList}>
+                  {listCabang.map((item, index) => (
+                    <TouchableOpacity 
+                      key={index} 
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setCabang(item);
+                        setShowDropdownCabang(false);
+                      }}
+                    >
+                      <Text style={styles.dropdownItemText}>{item}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
 
           {/* INFO BOX */}
           <View style={styles.infoBox}>
