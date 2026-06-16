@@ -1,6 +1,6 @@
 const db = require('../config/database');
 
-// PERUBAHAN: Gunakan "exports." secara langsung pada nama fungsi
+// --- FITUR BARANG MASUK & RESTOCK (MULTI TABLE TRANSACTION) ---
 exports.barangMasuk = (req, res) => {
     const {
         tipe_input,
@@ -17,78 +17,88 @@ exports.barangMasuk = (req, res) => {
         return res.status(400).json({ message: "Data tidak lengkap!" });
     }
 
-    db.beginTransaction((err) => {
-        if (err) return res.status(500).json({ error: "Gagal memulai transaksi database." });
+    // 1. PINJAM KONEKSI DARI POOL
+    db.getConnection((err, connection) => {
+        if (err) return res.status(500).json({ error: "Gagal meminjam koneksi database: " + err.message });
 
-        if (tipe_input === 'baru') {
-            const queryBarang = "INSERT INTO tb_barang (nama_barang, kategori, satuan) VALUES (?, ?, ?)";
+        // 2. MULAI TRANSAKSI PADA KONEKSI YANG DIPINJAM
+        connection.beginTransaction((err) => {
+            if (err) {
+                connection.release(); // Pulangkan koneksi jika gagal
+                return res.status(500).json({ error: "Gagal memulai transaksi database." });
+            }
 
-            db.query(queryBarang, [nama_barang, kategori, satuan], (err, resultBarang) => {
-                if (err) return db.rollback(() => res.status(500).json({ error: "Gagal simpan master barang: " + err.message }));
+            if (tipe_input === 'baru') {
+                const queryBarang = "INSERT INTO tb_barang (nama_barang, kategori, satuan) VALUES (?, ?, ?)";
 
-                const newIdBarang = resultBarang.insertId;
+                connection.query(queryBarang, [nama_barang, kategori, satuan], (err, resultBarang) => {
+                    if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ error: "Gagal simpan master barang: " + err.message }) });
 
-                const queryStok = "INSERT INTO tb_stok (id_barang, jumlah_stok, cabang) VALUES (?, ?, ?)";
-                db.query(queryStok, [newIdBarang, jumlah, cabang], (err) => {
-                    if (err) return db.rollback(() => res.status(500).json({ error: "Gagal simpan saldo stok: " + err.message }));
+                    const newIdBarang = resultBarang.insertId;
 
-                    // PERBAIKAN 1: Tambah kolom cabang untuk barang baru
-                    const queryHistori = "INSERT INTO tb_riwayat (id_barang, id_user, jenis_transaksi, jumlah, tanggal, cabang) VALUES (?, ?, 'Masuk', ?, NOW(), ?)";
-                    db.query(queryHistori, [newIdBarang, id_user, jumlah, cabang], (err) => {
-                        if (err) return db.rollback(() => res.status(500).json({ error: "Gagal mencatat histori: " + err.message }));
+                    const queryStok = "INSERT INTO tb_stok (id_barang, jumlah_stok, cabang) VALUES (?, ?, ?)";
+                    connection.query(queryStok, [newIdBarang, jumlah, cabang], (err) => {
+                        if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ error: "Gagal simpan saldo stok: " + err.message }) });
 
-                        db.commit((err) => {
-                            if (err) return db.rollback(() => res.status(500).json({ error: "Gagal commit database." }));
-                            return res.status(200).json({ message: "Barang baru berhasil terdaftar di master dan stok cabang!" });
-                        });
-                    });
-                });
-            });
-        }
-        else if (tipe_input === 'restock') {
-            const queryUpdateStok = "UPDATE tb_stok SET jumlah_stok = jumlah_stok + ? WHERE id_barang = ? AND cabang = ?";
-
-            db.query(queryUpdateStok, [jumlah, id_barang, cabang], (err, resultUpdate) => {
-                if (err) return db.rollback(() => res.status(500).json({ error: "Gagal update saldo stok: " + err.message }));
-
-                if (resultUpdate.affectedRows === 0) {
-                    const queryInsertStokBaru = "INSERT INTO tb_stok (id_barang, jumlah_stok, cabang) VALUES (?, ?, ?)";
-                    db.query(queryInsertStokBaru, [id_barang, jumlah, cabang], (err) => {
-                        if (err) return db.rollback(() => res.status(500).json({ error: "Gagal membuat data stok cabang baru." }));
-
-                        // PERBAIKAN 2: Tambah kolom cabang untuk restock (stok cabang baru)
                         const queryHistori = "INSERT INTO tb_riwayat (id_barang, id_user, jenis_transaksi, jumlah, tanggal, cabang) VALUES (?, ?, 'Masuk', ?, NOW(), ?)";
-                        db.query(queryHistori, [id_barang, id_user, jumlah, cabang], (err) => {
-                            if (err) return db.rollback(() => res.status(500).json({ error: "Gagal mencatat histori restock: " + err.message }));
+                        connection.query(queryHistori, [newIdBarang, id_user, jumlah, cabang], (err) => {
+                            if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ error: "Gagal mencatat histori: " + err.message }) });
 
-                            db.commit((err) => {
-                                if (err) return db.rollback(() => res.status(500).json({ error: "Gagal commit database." }));
-                                return res.status(200).json({ message: "ReStock cabang berhasil ditambahkan!" });
+                            connection.commit((err) => {
+                                if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ error: "Gagal commit database." }) });
+                                connection.release(); // KEMBALIKAN KONEKSI SETELAH SUKSES
+                                return res.status(200).json({ message: "Barang baru berhasil terdaftar di master dan stok cabang!" });
                             });
                         });
                     });
-                } else {
-                    // PERBAIKAN 3: Tambah kolom cabang untuk restock (stok cabang sudah ada)
-                    const queryHistori = "INSERT INTO tb_riwayat (id_barang, id_user, jenis_transaksi, jumlah, tanggal, cabang) VALUES (?, ?, 'Masuk', ?, NOW(), ?)";
-                    db.query(queryHistori, [id_barang, id_user, jumlah, cabang], (err) => {
-                        if (err) return db.rollback(() => res.status(500).json({ error: "Gagal mencatat histori restock: " + err.message }));
+                });
+            }
+            else if (tipe_input === 'restock') {
+                const queryUpdateStok = "UPDATE tb_stok SET jumlah_stok = jumlah_stok + ? WHERE id_barang = ? AND cabang = ?";
 
-                        db.commit((err) => {
-                            if (err) return db.rollback(() => res.status(500).json({ error: "Gagal commit database." }));
-                            return res.status(200).json({ message: "ReStock cabang berhasil diperbarui!" });
+                connection.query(queryUpdateStok, [jumlah, id_barang, cabang], (err, resultUpdate) => {
+                    if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ error: "Gagal update saldo stok: " + err.message }) });
+
+                    if (resultUpdate.affectedRows === 0) {
+                        const queryInsertStokBaru = "INSERT INTO tb_stok (id_barang, jumlah_stok, cabang) VALUES (?, ?, ?)";
+                        connection.query(queryInsertStokBaru, [id_barang, jumlah, cabang], (err) => {
+                            if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ error: "Gagal membuat data stok cabang baru." }) });
+
+                            const queryHistori = "INSERT INTO tb_riwayat (id_barang, id_user, jenis_transaksi, jumlah, tanggal, cabang) VALUES (?, ?, 'Masuk', ?, NOW(), ?)";
+                            connection.query(queryHistori, [id_barang, id_user, jumlah, cabang], (err) => {
+                                if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ error: "Gagal mencatat histori restock: " + err.message }) });
+
+                                connection.commit((err) => {
+                                    if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ error: "Gagal commit database." }) });
+                                    connection.release();
+                                    return res.status(200).json({ message: "ReStock cabang berhasil ditambahkan!" });
+                                });
+                            });
                         });
-                    });
-                }
-            });
-        } else {
-            db.rollback(() => res.status(400).json({ message: "Tipe input tidak valid." }));
-        }
+                    } else {
+                        const queryHistori = "INSERT INTO tb_riwayat (id_barang, id_user, jenis_transaksi, jumlah, tanggal, cabang) VALUES (?, ?, 'Masuk', ?, NOW(), ?)";
+                        connection.query(queryHistori, [id_barang, id_user, jumlah, cabang], (err) => {
+                            if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ error: "Gagal mencatat histori restock: " + err.message }) });
+
+                            connection.commit((err) => {
+                                if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ error: "Gagal commit database." }) });
+                                connection.release();
+                                return res.status(200).json({ message: "ReStock cabang berhasil diperbarui!" });
+                            });
+                        });
+                    }
+                });
+            } else {
+                connection.release(); // Pulangkan koneksi jika tipe_input salah
+                return res.status(400).json({ message: "Tipe input tidak valid." });
+            }
+        });
     });
 };
 
 // --- FITUR MENGAMBIL DATA BARANG & STOK (UNTUK DASHBOARD) ---
+// Catatan: Fungsi SELECT biasa tidak perlu getConnection manual, db.query akan mengelolanya otomatis
 exports.getItems = (req, res) => {
-    // Query JOIN untuk menggabungkan master barang dan saldo cabang
     const query = `
         SELECT 
             b.id_barang, 
@@ -117,28 +127,34 @@ exports.barangKeluar = (req, res) => {
         return res.status(400).json({ message: "Data tidak lengkap!" });
     }
 
-    db.beginTransaction((err) => {
-        if (err) return res.status(500).json({ error: "Gagal memulai transaksi database." });
+    db.getConnection((err, connection) => {
+        if (err) return res.status(500).json({ error: "Gagal meminjam koneksi database: " + err.message });
 
-        const queryKurangStok = "UPDATE tb_stok SET jumlah_stok = jumlah_stok - ? WHERE id_barang = ? AND cabang = ?";
-
-        db.query(queryKurangStok, [jumlah, id_barang, cabang], (err, resultUpdate) => {
-            if (err) return db.rollback(() => res.status(500).json({ error: "Gagal memotong saldo stok: " + err.message }));
-
-            if (resultUpdate.affectedRows === 0) {
-                return db.rollback(() => res.status(404).json({ error: "Data stok barang di cabang ini tidak ditemukan." }));
+        connection.beginTransaction((err) => {
+            if (err) {
+                connection.release();
+                return res.status(500).json({ error: "Gagal memulai transaksi database." });
             }
 
-            // PERBAIKAN: Menambahkan kolom 'cabang' dan menggunakan huruf kapital 'Keluar'
-            const queryHistori = "INSERT INTO tb_riwayat (id_barang, id_user, jenis_transaksi, jumlah, tanggal, cabang) VALUES (?, ?, 'Keluar', ?, NOW(), ?)";
+            const queryKurangStok = "UPDATE tb_stok SET jumlah_stok = jumlah_stok - ? WHERE id_barang = ? AND cabang = ?";
 
-            // PERBAIKAN: Memasukkan variabel 'cabang' ke dalam susunan array parameter query
-            db.query(queryHistori, [id_barang, id_user, jumlah, cabang], (err) => {
-                if (err) return db.rollback(() => res.status(500).json({ error: "Gagal mencatat histori pengeluaran: " + err.message }));
+            connection.query(queryKurangStok, [jumlah, id_barang, cabang], (err, resultUpdate) => {
+                if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ error: "Gagal memotong saldo stok: " + err.message }) });
 
-                db.commit((err) => {
-                    if (err) return db.rollback(() => res.status(500).json({ error: "Gagal commit database." }));
-                    return res.status(200).json({ message: "Barang keluar berhasil dicatat dan stok cabang telah dikurangi!" });
+                if (resultUpdate.affectedRows === 0) {
+                    return connection.rollback(() => { connection.release(); res.status(404).json({ error: "Data stok barang di cabang ini tidak ditemukan." }) });
+                }
+
+                const queryHistori = "INSERT INTO tb_riwayat (id_barang, id_user, jenis_transaksi, jumlah, tanggal, cabang) VALUES (?, ?, 'Keluar', ?, NOW(), ?)";
+
+                connection.query(queryHistori, [id_barang, id_user, jumlah, cabang], (err) => {
+                    if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ error: "Gagal mencatat histori pengeluaran: " + err.message }) });
+
+                    connection.commit((err) => {
+                        if (err) return connection.rollback(() => { connection.release(); res.status(500).json({ error: "Gagal commit database." }) });
+                        connection.release();
+                        return res.status(200).json({ message: "Barang keluar berhasil dicatat dan stok cabang telah dikurangi!" });
+                    });
                 });
             });
         });
@@ -147,11 +163,8 @@ exports.barangKeluar = (req, res) => {
 
 // --- FITUR MENGAMBIL RIWAYAT TRANSAKSI (HISTORY) ---
 exports.getHistory = (req, res) => {
-    // Menangkap parameter filter dari URL (Query String)
     const { startDate, endDate, cabang, jenis_transaksi } = req.query;
 
-    // Query dasar dengan JOIN ke tb_barang dan tb_users
-    // Sesuaikan 'u.username' dengan nama kolom di tabel tb_users milikmu (misal: u.nama_lengkap atau u.nama)
     let query = `
         SELECT 
             r.id_transaksi, 
@@ -169,26 +182,21 @@ exports.getHistory = (req, res) => {
 
     let queryParams = [];
 
-    // 1. Filter Tanggal (Jika ada)
     if (startDate && endDate) {
-        // Tambahkan 23:59:59 pada endDate agar mencakup transaksi hingga akhir hari tersebut
         query += ` AND r.tanggal >= ? AND r.tanggal <= ?`;
         queryParams.push(`${startDate} 00:00:00`, `${endDate} 23:59:59`);
     }
 
-    // 2. Filter Cabang (Jika ada dan bukan 'All')
     if (cabang && cabang.toLowerCase() !== 'all') {
         query += ` AND r.cabang = ?`;
         queryParams.push(cabang);
     }
 
-    // 3. Filter Jenis Transaksi (Masuk / Keluar)
     if (jenis_transaksi) {
         query += ` AND r.jenis_transaksi = ?`;
         queryParams.push(jenis_transaksi);
     }
 
-    // Urutkan dari yang paling baru
     query += ` ORDER BY r.tanggal DESC`;
 
     db.query(query, queryParams, (err, results) => {
@@ -200,7 +208,6 @@ exports.getHistory = (req, res) => {
 };
 
 exports.getLowStock = (req, res) => {
-    // Kita set batas aman (threshold) misalnya 10. Bisa disesuaikan nanti.
     const query = `
         SELECT b.nama_barang, s.jumlah_stok, s.cabang, b.kategori 
         FROM tb_stok s
@@ -218,4 +225,3 @@ exports.getLowStock = (req, res) => {
         });
     });
 };
-// Tidak perlu module.exports di bawah lagi karena sudah pakai exports.barangMasuk di atas
