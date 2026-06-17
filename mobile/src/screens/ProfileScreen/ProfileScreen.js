@@ -19,7 +19,7 @@ export default function ProfileScreen({ route, navigation }) {
 
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isNotifEnabled, setIsNotifEnabled] = useState(true);
-  
+
   const [isLogoutModalVisible, setLogoutModalVisible] = useState(false);
 
   const [notifikasi, setNotifikasi] = useState([]);
@@ -72,12 +72,12 @@ export default function ProfileScreen({ route, navigation }) {
     try {
       const response = await fetch(`https://warkop.sikitom.my.id/api/inventory/low-stock`);
       const result = await response.json();
-      
+
       if (response.ok) {
-        const filteredData = isOwner 
-          ? result.data 
+        const filteredData = isOwner
+          ? result.data
           : result.data.filter(item => item.cabang?.toLowerCase() === user?.cabang?.toLowerCase());
-          
+
         setNotifikasi(filteredData);
 
         // PICU NOTIFIKASI SISTEM JIKA ADA DATA DAN TOGGLE MENYALA
@@ -113,7 +113,7 @@ export default function ProfileScreen({ route, navigation }) {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        
+
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <Image source={isOwner ? require('../../../assets/owner.jpg') : require('../../../assets/staff.jpg')} style={styles.avatarImg} />
@@ -134,7 +134,7 @@ export default function ProfileScreen({ route, navigation }) {
             <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#888', marginBottom: 10, textTransform: 'uppercase' }}>
               Peringatan Stok (Sisa ≤ 10)
             </Text>
-            
+
             {loadingNotif ? (
               <ActivityIndicator size="small" color="#FFCC00" />
             ) : notifikasi.length === 0 ? (
@@ -144,8 +144,8 @@ export default function ProfileScreen({ route, navigation }) {
               </View>
             ) : (
               notifikasi.map((item, index) => (
-                <View key={index} style={{ 
-                  backgroundColor: '#FFF', padding: 15, borderRadius: 12, marginBottom: 8, 
+                <View key={index} style={{
+                  backgroundColor: '#FFF', padding: 15, borderRadius: 12, marginBottom: 8,
                   flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
                   borderWidth: 1, borderColor: '#FFCDD2', elevation: 1
                 }}>
@@ -175,16 +175,25 @@ export default function ProfileScreen({ route, navigation }) {
 
           {isOwner && (
             <>
+              {/* --- TOMBOL BARU: LIHAT DAFTAR AKUN --- */}
+              <TouchableOpacity style={styles.menuCard} onPress={() => navigation.navigate('ListUser', { user })}>
+                <View style={styles.iconBox}><Ionicons name="people-outline" size={22} color="#B8860B" /></View>
+                <Text style={styles.menuText}>Lihat Daftar Akun</Text>
+                <Ionicons name="chevron-forward" size={20} color="#CCC" />
+              </TouchableOpacity>
+
               <TouchableOpacity style={styles.menuCard} onPress={() => navigation.navigate('AddUser', { user })}>
                 <View style={styles.iconBox}><Ionicons name="person-add-outline" size={22} color="#B8860B" /></View>
                 <Text style={styles.menuText}>Tambah User Baru</Text>
                 <Ionicons name="chevron-forward" size={20} color="#CCC" />
               </TouchableOpacity>
+
               <TouchableOpacity style={styles.menuCard} onPress={() => navigation.navigate('ChangeStaffPwd', { user })}>
                 <View style={styles.iconBox}><Ionicons name="shield-checkmark-outline" size={22} color="#B8860B" /></View>
                 <Text style={styles.menuText}>Ganti Password Staff</Text>
                 <Ionicons name="chevron-forward" size={20} color="#CCC" />
               </TouchableOpacity>
+
               <TouchableOpacity style={styles.menuCard} onPress={() => navigation.navigate('DeleteUser', { user })}>
                 <View style={[styles.iconBox, styles.iconBoxRed]}><Ionicons name="person-remove-outline" size={22} color="#D32F2F" /></View>
                 <Text style={styles.menuText}>Hapus User</Text>

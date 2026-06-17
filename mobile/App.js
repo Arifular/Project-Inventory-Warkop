@@ -15,6 +15,7 @@ import InputScreen from './src/screens/InputScreen/InputScreen';
 
 // Import Halaman Profil
 import ProfileScreen from './src/screens/ProfileScreen/ProfileScreen';
+import ListUserScreen from './src/screens/ListUserScreen/ListUserScreen';
 import AddUserScreen from './src/screens/AddUserScreen/AddUserScreen';
 import ChangePwdScreen from './src/screens/ChangePwdScreen/ChangePwdScreen';
 import ChangeStaffPwdScreen from './src/screens/ChangeStaffPwdScreen/ChangeStaffPwdScreen';
@@ -24,7 +25,7 @@ import InputBarangScreen from './src/screens/InputBarangScreen/InputBarangScreen
 
 import RestockScreen from './src/screens/RestockScreen/RestockScreen';
 
-// IMPORT HALAMAN HALAMAN SEMENTARA (Kamu bisa buat file ini nanti, untuk sementara tampilkan "Under Construction" atau sejenisnya)
+// Import Halaman History dan Output
 import HistoryScreen from './src/screens/HistoryScreen/HistoryScreen';
 import OutputScreen from './src/screens/OutputScreen/OutputScreen';
 
@@ -154,6 +155,7 @@ export default function App() {
         
         {/* Layar Profil Lainnya Tetap Menggunakan Stack (Agar menu tab di bawah tertutup saat form ini dibuka) */}
         <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name='ListUserScreen' component={ListUserScreen} />
         <Stack.Screen name="AddUser" component={AddUserScreen} />
         <Stack.Screen name="ChangePwd" component={ChangePwdScreen} />
         <Stack.Screen name="ChangeStaffPwd" component={ChangeStaffPwdScreen} />
