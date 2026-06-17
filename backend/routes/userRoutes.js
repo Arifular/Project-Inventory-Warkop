@@ -15,6 +15,9 @@ router.put('/change-password', userController.updatePasswordSendiri);
 // Route Tambah User
 router.post('/add-user', userController.tambahUser);
 
+// Route Ambil Daftar User (BARU)
+router.get('/list', userController.getAllUsers);
+
 // Route Ambil Daftar Staf Berdasarkan Cabang (Baru)
 router.get('/staff/:cabang', userController.getStafByCabang);
 

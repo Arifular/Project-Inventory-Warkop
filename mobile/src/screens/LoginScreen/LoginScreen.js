@@ -96,8 +96,9 @@ export default function LoginScreen({ navigation }) {
         <View style={styles.inputContainer}>
           <Ionicons name="person-outline" size={20} color="#888" style={styles.inputIcon} />
           <TextInput 
-            style={styles.input}
-            placeholder="Enter your username"
+            style={[styles.input, { color: '#000000' }]}
+            placeholder="Masukan username"
+            placeholderTextColor="#888888"
             value={username}
             onChangeText={setUsername}
             autoCapitalize="none"
@@ -108,7 +109,7 @@ export default function LoginScreen({ navigation }) {
         <View style={styles.inputContainer}>
           <Ionicons name="lock-closed-outline" size={20} color="#888" style={styles.inputIcon} />
           <TextInput 
-            style={styles.input}
+            style={[styles.input, { color: '#000000' }]}
             placeholder="••••••••"
             secureTextEntry={!showPassword}
             value={password}

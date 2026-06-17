@@ -176,6 +176,24 @@ const logout = (req, res) => {
     });
 };
 
+// --- 6. FITUR MENGAMBIL DAFTAR USER (KHUSUS ADMIN) ---
+exports.getAllUsers = (req, res) => {
+    // panggil semua user kecuali password-nya, diurutkan dari Admin dulu
+    const query = `
+        SELECT id_user, username, role, cabang 
+        FROM tb_user 
+        ORDER BY role ASC, username ASC
+    `;
+
+    const db = require('../config/database');
+    db.query(query, (err, results) => {
+        if (err) {
+            return res.status(500).json({ message: "Gagal mengambil data user", error: err.message });
+        }
+        return res.status(200).json({ data: results });
+    });
+};
+
 module.exports = {
     updatePasswordSendiri,
     tambahUser,
