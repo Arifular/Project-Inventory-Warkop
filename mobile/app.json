@@ -11,7 +11,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
+        "foregroundImage": "./assets/icon3.png",
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.warkopmeteora.inventory",
@@ -22,6 +22,11 @@
     },
     "web": {
       "favicon": "./assets/icon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c6ac7c53-7b5e-4609-b37f-0bfbb1117b13"
+      }
     }
   }
 }

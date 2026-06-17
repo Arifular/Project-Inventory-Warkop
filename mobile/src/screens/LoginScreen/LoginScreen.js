@@ -107,7 +107,7 @@ export default function LoginScreen({ navigation }) {
 
         <Text style={styles.inputLabel}>Password</Text>
         <View style={styles.inputContainer}>
-          <Ionicons name="lock-closed-outline" size={20} color="#888" style={styles.inputIcon} />
+          <Ionicons name="lock-closed-outline" size={20} color="#000000" style={styles.inputIcon} />
           <TextInput 
             style={[styles.input, { color: '#000000' }]}
             placeholder="••••••••"

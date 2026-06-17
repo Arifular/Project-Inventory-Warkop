@@ -177,7 +177,7 @@ const logout = (req, res) => {
 };
 
 // --- 6. FITUR MENGAMBIL DAFTAR USER (KHUSUS ADMIN) ---
-exports.getAllUsers = (req, res) => {
+const getAllUsers = (req, res) => {
     // panggil semua user kecuali password-nya, diurutkan dari Admin dulu
     const query = `
         SELECT id_user, username, role, cabang 
@@ -200,5 +200,6 @@ module.exports = {
     getStafByCabang,
     resetPasswordStaf,
     hapusUser,
-    logout
+    logout,
+    getAllUsers
 };
