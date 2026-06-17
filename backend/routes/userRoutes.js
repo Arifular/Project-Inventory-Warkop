@@ -3,9 +3,6 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const inventoryController = require('../controllers/inventoryController');
 
-// Mapping endpoint ganti password sendiri menggunakan method PUT
-router.put('/change-password', userController.updatePasswordSendiri);
-
 // Route Tambah User (Baru)
 router.post('/add-user', userController.tambahUser);
 
